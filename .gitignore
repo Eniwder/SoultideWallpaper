@@ -1,0 +1,16 @@
+.vscode/
+.DS_Store
+*.sln
+*.meta
+*.prefab
+*.asset
+build/
+Temp/
+Logs/
+ProjectSettings/
+UserSettings/
+Resources/
+Scenes/
+Settings/
+Packages/
+Library/
