@@ -8,10 +8,10 @@ public static class ConfigLoader
     public class ConfigData
     {
         public MazeConfig maze;
-        public int characters;
+        public int dolls;
         public int fps;
     }
-    
+
     [System.Serializable]
     public class MazeConfig
     {
@@ -21,6 +21,7 @@ public static class ConfigLoader
     }
 
     private static ConfigData config;
+    private static System.Random random = new System.Random();
 
     // Configを取得するメソッド（初回読み込み時にデシリアライズ）
     public static ConfigData GetConfig()
