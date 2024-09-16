@@ -43,7 +43,6 @@ public class MazeManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            // CreateMaze();
         }
         else
         {
@@ -103,6 +102,36 @@ public class MazeManager : MonoBehaviour
         }
         tiles = new GameObject[row, col];
         roads = new GameObject[row, col, 2];
+    }
+
+    public void walked(int x, int y)
+    {
+        if (exploredGrid[y, x]) return;
+        exploredGrid[y, x] = true;
+        Image image = tiles[y, x].GetComponent<Image>();
+        image.sprite = tileActive;
+
+        // roadsの生成ロジック的にIsInsideは不要だが一応やっておく
+        if (IsInside(x + 1, y) && roads[y, x, Direction.Horizontal] != null && exploredGrid[y, x + 1])
+        {
+            image = roads[y, x, Direction.Horizontal].GetComponent<Image>();
+            image.sprite = roadActive;
+        }
+        if (IsInside(x, y + 1) && roads[y, x, Direction.Vertical] != null && exploredGrid[y + 1, x])
+        {
+            image = roads[y, x, Direction.Vertical].GetComponent<Image>();
+            image.sprite = roadActive;
+        }
+        if (IsInside(x - 1, y) && roads[y, x - 1, Direction.Horizontal] != null && exploredGrid[y, x - 1])
+        {
+            image = roads[y, x - 1, Direction.Horizontal].GetComponent<Image>();
+            image.sprite = roadActive;
+        }
+        if (IsInside(x, y - 1) && roads[y - 1, x, Direction.Vertical] != null && exploredGrid[y - 1, x])
+        {
+            image = roads[y - 1, x, Direction.Vertical].GetComponent<Image>();
+            image.sprite = roadActive;
+        }
 
     }
 

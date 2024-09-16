@@ -36,7 +36,8 @@ public class GameManager : MonoBehaviour
     public void ResetGame()
     {
         MazeManager.Instance.CleanMaze();
-        // DollManager.Instance.Initialize();
+        DollManager.Instance.CleanDoll();
+        StartCoroutine(StartGame());
     }
 
 

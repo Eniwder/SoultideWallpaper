@@ -19,7 +19,6 @@ public class DollManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            _Initialize();
         }
         else
         {
@@ -27,15 +26,20 @@ public class DollManager : MonoBehaviour
         }
     }
 
-    public void _Initialize()
-    {
-        dollList = getDolls(ConfigLoader.GetConfig().doll.num);
-    }
 
     public void Update()
     {
         if (Instance == null || dolls.Count < 1) return;
         SortDollsByPosition();
+    }
+
+    public void CleanDoll()
+    {
+        foreach (var doll in dolls)
+        {
+            Destroy(doll);
+        }
+        dolls.Clear();
     }
 
     // Y座標に基づいてキャラクターをソートする TODO パフォーマンスへの影響
@@ -52,6 +56,7 @@ public class DollManager : MonoBehaviour
 
     public IEnumerator SpawnDoll()
     {
+        dollList = getDolls(ConfigLoader.GetConfig().doll.num);
         var walkableGridPosList = new List<Vector2Int>();
         for (int y = 0; y < MazeManager.Instance.row; y++)
         {
@@ -75,6 +80,7 @@ public class DollManager : MonoBehaviour
             doll.transform.position = trt.position;
             dolls.Add(doll);
             yield return new WaitForSeconds(0.3f);
+            MazeManager.Instance.walked(walkableGridPos[i].x, walkableGridPos[i].y);
         }
     }
 
