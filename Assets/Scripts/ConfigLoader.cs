@@ -8,7 +8,7 @@ public static class ConfigLoader
     public class ConfigData
     {
         public MazeConfig maze;
-        public int dolls;
+        public DollConfig doll;
         public int fps;
     }
 
@@ -18,6 +18,13 @@ public static class ConfigLoader
         public int col;
         public int row;
         public int droprate;
+    }
+
+    [System.Serializable]
+    public class DollConfig
+    {
+        public int num;
+        public string[] cand;
     }
 
     private static ConfigData config;

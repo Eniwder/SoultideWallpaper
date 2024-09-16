@@ -19,7 +19,7 @@ public class MazeManager : MonoBehaviour
 
     public GameObject[,,] roads;
 
-    private GameObject[,] tiles;
+    public GameObject[,] tiles;
 
     // 描画用
     public GameObject tilePrefab; // Tileのプレハブ（Canvasの子として配置するImage）
@@ -33,16 +33,17 @@ public class MazeManager : MonoBehaviour
 
     public RectTransform canvasRectTransform; // CanvasのRectTransform
 
-    private int col;
-    private int row;
+    public int col;
+    public int row;
+    private float totalFadeDuration = 2f; // TODO
 
-    private void Awake()
+    public void Initialize()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            Initialize();
+            // CreateMaze();
         }
         else
         {
@@ -51,7 +52,7 @@ public class MazeManager : MonoBehaviour
     }
 
     // 初期化
-    public void Initialize()
+    public IEnumerator CreateMaze()
     {
         col = ConfigLoader.GetConfig().maze.col;
         row = ConfigLoader.GetConfig().maze.row;
@@ -78,7 +79,7 @@ public class MazeManager : MonoBehaviour
         InitRoads(col, row);
 
         // GenerateRoads();
-        StartCoroutine(FadeInMaze(col, row));
+        yield return StartCoroutine(FadeInMaze(col, row));
 
         // タイルを結ぶRouteの作成
         // exploredGridに応じてタイルの状態を変更
@@ -87,11 +88,29 @@ public class MazeManager : MonoBehaviour
         // image.sprite = tileActive;
     }
 
+    public void CleanMaze()
+    {
+        characterGrid = new bool[row, col];
+        walkableGrid = new bool[row, col];
+        exploredGrid = new bool[row, col];
+        foreach (var tile in tiles)
+        {
+            Destroy(tile);
+        }
+        foreach (var road in roads)
+        {
+            Destroy(road);
+        }
+        tiles = new GameObject[row, col];
+        roads = new GameObject[row, col, 2];
+
+    }
+
     private IEnumerator FadeInMaze(int col, int row)
     {
-        StartCoroutine(FadeInRoad(col, row, 10f));
+        StartCoroutine(FadeInRoad(col, row, totalFadeDuration));
         yield return new WaitForSeconds(0.5f);
-        StartCoroutine(FadeInTile(col, row, 10f));
+        yield return StartCoroutine(FadeInTile(col, row, totalFadeDuration));
     }
 
     private IEnumerator FadeInTile(int col, int row, float totalFadeDuration)
@@ -231,7 +250,7 @@ public class MazeManager : MonoBehaviour
 
 
             Image image = road.GetComponent<Image>();
-            image.sprite = roadActive;
+            image.sprite = roadDeactive;
             image.color = new Color(image.color.r, image.color.g, image.color.b, 0);
 
             RectTransform trt = tiles[y, x].GetComponent<RectTransform>();
@@ -272,19 +291,19 @@ public class MazeManager : MonoBehaviour
         }
     }
 
-    private void DebugShowMaze()
-    {
-        string buff = "";
-        for (int y = 0; y < row; y++)
-        {
-            for (int x = 0; x < col; x++)
-            {
-                buff += walkableGrid[y, x] ? "□" : "■";
-            }
-            buff += "\n";
-        }
-        Debug.Log(buff);
-    }
+    // private void DebugShowMaze()
+    // {
+    //     string buff = "";
+    //     for (int y = 0; y < row; y++)
+    //     {
+    //         for (int x = 0; x < col; x++)
+    //         {
+    //             buff += walkableGrid[y, x] ? "□" : "■";
+    //         }
+    //         buff += "\n";
+    //     }
+    //     Debug.Log(buff);
+    // }
 
     private bool IsInside(int x, int y)
     {
@@ -422,7 +441,7 @@ public class MazeManager : MonoBehaviour
             GameObject tile = Instantiate(tilePrefab, canvasRectTransform);
             tiles[y, x] = tile;
             Image image = tile.GetComponent<Image>();
-            image.sprite = tileActive;
+            image.sprite = tileDeactive;
             image.color = new Color(image.color.r, image.color.g, image.color.b, 0);
 
             RectTransform rt = tile.GetComponent<RectTransform>();
