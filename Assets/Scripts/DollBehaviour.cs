@@ -50,12 +50,12 @@ public class DollBehaviour : MonoBehaviour
                             .Select(animation => animation.ToString()).ToArray();
     }
 
-    private void idling()
+    private void Idling()
     {
         StartCoroutine(PlayAnimationForDuration("idle", animDuration["idle"], false));
     }
 
-    private void randomMotion()
+    private void RandomMotion()
     {
         if (random.NextDouble() <= ConfigLoader.GetConfig().doll.walkrate)
         {
@@ -67,11 +67,11 @@ public class DollBehaviour : MonoBehaviour
             }
         }
         var anim = normalAnims[random.Next(normalAnims.Length)];
-        addScore(anim);
+        AddScore(anim);
         StartCoroutine(PlayAnimationForDuration(anim, animDuration.GetValueOrDefault(anim, animDuration["homeInsert"]), true));
     }
 
-    private void addScore(string anim)
+    private void AddScore(string anim)
     {
         if (anim == "gather")
         {
@@ -101,17 +101,17 @@ public class DollBehaviour : MonoBehaviour
         skel.AnimationState.SetEmptyAnimation(0, 0);
         if (nextIdle)
         {
-            idling();
+            Idling();
         }
         else
         {
             if (escape)
             {
-                fallReverse();
+                FallReverse();
             }
             else
             {
-                randomMotion();
+                RandomMotion();
             }
 
         }
@@ -120,7 +120,7 @@ public class DollBehaviour : MonoBehaviour
     private void OnInit(Spine.TrackEntry trackEntry)
     {
         MazeManager.Instance.walked(currentPos.x, currentPos.y);
-        idling();
+        Idling();
         skel.AnimationState.Complete -= OnInit;
         return;
     }
@@ -148,13 +148,13 @@ public class DollBehaviour : MonoBehaviour
         return ret.ToArray();
     }
 
-    private void fallReverse()
+    private void FallReverse()
     {
         var track = skel.AnimationState.SetAnimation(0, "fall", false);
         track.TimeScale = 0f;
-        StartCoroutine(helper());
+        StartCoroutine(Helper());
 
-        IEnumerator helper()
+        IEnumerator Helper()
         {
             for (float i = 0f; i < track.AnimationEnd; i += 0.016f)
             {
@@ -177,11 +177,11 @@ public class DollBehaviour : MonoBehaviour
         MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = false;
         currentPos = nextPos;
         MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = true;
-        yield return StartCoroutine(helper(crt.position, drt.position, animDuration["walk"]));
+        yield return StartCoroutine(Helper(crt.position, drt.position, animDuration["walk"]));
         MazeManager.Instance.walked(currentPos.x, currentPos.y);
-        idling();
+        Idling();
 
-        IEnumerator helper(Vector2 cpos, Vector2 dpos, float duration)
+        IEnumerator Helper(Vector2 cpos, Vector2 dpos, float duration)
         {
             Vector2 diff = dpos - cpos;
             Vector2 step = diff / duration;

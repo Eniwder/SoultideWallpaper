@@ -31,8 +31,8 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        StartCoroutine(helper());
-        IEnumerator helper()
+        StartCoroutine(Helper());
+        IEnumerator Helper()
         {
             yield return MazeManager.Instance.CreateMaze();
             yield return DollManager.Instance.SpawnDoll();
@@ -41,8 +41,8 @@ public class GameManager : MonoBehaviour
 
     public void FinishGame()
     {
-        StartCoroutine(helper());
-        IEnumerator helper()
+        StartCoroutine(Helper());
+        IEnumerator Helper()
         {
             yield return DollManager.Instance.EscapeDoll();
             yield return MazeManager.Instance.DeleteMaze();
@@ -50,13 +50,5 @@ public class GameManager : MonoBehaviour
         }
 
     }
-
-    public void ResetGame()
-    {
-        MazeManager.Instance.CleanMaze();
-        DollManager.Instance.CleanDoll();
-        StartGame();
-    }
-
 
 }

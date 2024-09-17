@@ -106,8 +106,9 @@ public class DollManager : MonoBehaviour
             allEscape = true;
             foreach (var doll in dolls)
             {
-                yield return allEscape = allEscape && (doll == null);
+                allEscape = allEscape && (doll == null);
             }
+            yield return null;
         }
         dolls.Clear();
     }
@@ -132,37 +133,4 @@ public class DollManager : MonoBehaviour
             return parts[0];
         }
     }
-
-    private IEnumerator Test()
-    {
-        // var 
-        for (int y = 0; y < MazeManager.Instance.row; y++)
-        {
-            for (int x = 0; x < MazeManager.Instance.col; x++)
-            {
-                if (MazeManager.Instance.walkableGrid[y, x])
-                {
-                    yield return new WaitForSeconds(0.3f);
-                    GameObject prefab = Resources.Load<GameObject>("Prefabs/Spine/Homeland_Akaset");
-                    GameObject doll = Instantiate(prefab, canvasRectTransform);
-                    DollBehaviour dollScript = doll.GetComponent<DollBehaviour>();
-                    RectTransform trt = MazeManager.Instance.tiles[y, x].GetComponent<RectTransform>();
-                    doll.transform.position = trt.position;
-                }
-            }
-        }
-        for (int i = 0; i < 40; i++)
-        {
-            yield return new WaitForSeconds(1f);
-            GameObject prefab = Resources.Load<GameObject>("Prefabs/Spine/Homeland_Akaset");
-            GameObject doll = Instantiate(prefab, canvasRectTransform);
-            DollBehaviour dollScript = doll.GetComponent<DollBehaviour>();
-            doll.transform.position = new Vector3(1 - i * 0.1f, 1 - i * 0.1f, 0);  // 任意の位置
-        }
-    }
-
-    // private SpineAtlasAsset atlasAsset;
-
-
-
 }

@@ -145,19 +145,19 @@ public class MazeManager : MonoBehaviour
     public IEnumerator DeleteMaze()
     {
         yield return StartCoroutine(FadeOutMaze(col, row));
-        // dollGrid = new bool[row, col];
-        // walkableGrid = new bool[row, col];
-        // exploredGrid = new bool[row, col];
-        // foreach (var tile in tiles)
-        // {
-        //     Destroy(tile);
-        // }
-        // foreach (var road in roads)
-        // {
-        //     Destroy(road);
-        // }
-        // tiles = new GameObject[row, col];
-        // roads = new GameObject[row, col, 2];
+        dollGrid = new bool[row, col];
+        walkableGrid = new bool[row, col];
+        exploredGrid = new bool[row, col];
+        foreach (var tile in tiles)
+        {
+            Destroy(tile);
+        }
+        foreach (var road in roads)
+        {
+            Destroy(road);
+        }
+        tiles = new GameObject[row, col];
+        roads = new GameObject[row, col, 2];
     }
 
     private IEnumerator FadeOutMaze(int col, int row)
