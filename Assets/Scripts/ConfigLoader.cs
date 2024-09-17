@@ -10,6 +10,7 @@ public static class ConfigLoader
         public MazeConfig maze;
         public DollConfig doll;
         public int fps;
+        public bool score;
     }
 
     [System.Serializable]
@@ -17,13 +18,14 @@ public static class ConfigLoader
     {
         public int col;
         public int row;
-        public int droprate;
+        public float droprate;
     }
 
     [System.Serializable]
     public class DollConfig
     {
         public int num;
+        public float walkrate;
         public string[] cand;
     }
 

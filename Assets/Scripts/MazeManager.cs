@@ -12,9 +12,10 @@ public class MazeManager : MonoBehaviour
 {
     private static System.Random random = new System.Random();
     public static MazeManager Instance;
-    public bool[,] characterGrid; // キャラがいるかどうか
+    public bool[,] dollGrid; // キャラがいるかどうか
     public bool[,] walkableGrid; // 通れるかどうか
     public bool[,] exploredGrid; // 踏破されたかどうか
+    private int unexplored;
 
 
     public GameObject[,,] roads;
@@ -22,20 +23,20 @@ public class MazeManager : MonoBehaviour
     public GameObject[,] tiles;
 
     // 描画用
-    public GameObject tilePrefab; // Tileのプレハブ（Canvasの子として配置するImage）
-    public Sprite tileActive; // Tileのスプライト
-    public Sprite tileDeactive; // Tileのスプライト
+    public GameObject tilePrefab;
+    public Sprite tileActive;
+    public Sprite tileDeactive;
 
-    public GameObject roadPrefab; // Tileのプレハブ（Canvasの子として配置するImage）
-    public Sprite roadActive; // Tileのスプライト
-    public Sprite roadDeactive; // Tileのスプライト
+    public GameObject roadPrefab;
+    public Sprite roadActive;
+    public Sprite roadDeactive;
 
 
-    public RectTransform canvasRectTransform; // CanvasのRectTransform
+    public RectTransform canvasRectTransform;
 
     public int col;
     public int row;
-    private float totalFadeDuration = 2f; // TODO
+    private float totalFadeDuration = 10f; // TODO
 
     public void Initialize()
     {
@@ -66,7 +67,7 @@ public class MazeManager : MonoBehaviour
             // MyUtil.Log(maxNum, minNum, col, row);
         }
 
-        characterGrid = new bool[row, col];
+        dollGrid = new bool[row, col];
         walkableGrid = new bool[row, col];
         exploredGrid = new bool[row, col];
         tiles = new GameObject[row, col];
@@ -89,7 +90,7 @@ public class MazeManager : MonoBehaviour
 
     public void CleanMaze()
     {
-        characterGrid = new bool[row, col];
+        dollGrid = new bool[row, col];
         walkableGrid = new bool[row, col];
         exploredGrid = new bool[row, col];
         foreach (var tile in tiles)
@@ -107,6 +108,9 @@ public class MazeManager : MonoBehaviour
     public void walked(int x, int y)
     {
         if (exploredGrid[y, x]) return;
+        unexplored--;
+        ScoreManager.Instance.AddScore(10);
+        ScoreManager.Instance.SaveScore();
         exploredGrid[y, x] = true;
         Image image = tiles[y, x].GetComponent<Image>();
         image.sprite = tileActive;
@@ -132,17 +136,45 @@ public class MazeManager : MonoBehaviour
             image = roads[y - 1, x, Direction.Vertical].GetComponent<Image>();
             image.sprite = roadActive;
         }
+        if (unexplored == 0)
+        {
+            GameManager.Instance.FinishGame();
+        }
+    }
 
+    public IEnumerator DeleteMaze()
+    {
+        yield return StartCoroutine(FadeOutMaze(col, row));
+        // dollGrid = new bool[row, col];
+        // walkableGrid = new bool[row, col];
+        // exploredGrid = new bool[row, col];
+        // foreach (var tile in tiles)
+        // {
+        //     Destroy(tile);
+        // }
+        // foreach (var road in roads)
+        // {
+        //     Destroy(road);
+        // }
+        // tiles = new GameObject[row, col];
+        // roads = new GameObject[row, col, 2];
+    }
+
+    private IEnumerator FadeOutMaze(int col, int row)
+    {
+        StartCoroutine(FadeRoad(col, row, totalFadeDuration, false));
+        yield return new WaitForSeconds(0.5f);
+        yield return StartCoroutine(FadeTile(col, row, totalFadeDuration, false));
     }
 
     private IEnumerator FadeInMaze(int col, int row)
     {
-        StartCoroutine(FadeInRoad(col, row, totalFadeDuration));
+        StartCoroutine(FadeRoad(col, row, totalFadeDuration, true));
         yield return new WaitForSeconds(0.5f);
-        yield return StartCoroutine(FadeInTile(col, row, totalFadeDuration));
+        yield return StartCoroutine(FadeTile(col, row, totalFadeDuration, true));
     }
 
-    private IEnumerator FadeInTile(int col, int row, float totalFadeDuration)
+    private IEnumerator FadeTile(int col, int row, float totalFadeDuration, bool fadeIn)
     {
         float elapsedTime = 0f;
         float fadeDuration = 1f;
@@ -171,7 +203,7 @@ public class MazeManager : MonoBehaviour
                         Color color = images[y, x].color;
                         float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - xy * (x + y), 0f) / fadeDuration); // 左から右にFadeInしたい場合
                         // float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - randomDelays[y, x], 0f) / fadeDuration);
-                        color.a = alpha;
+                        color.a = fadeIn ? alpha : 1 - alpha;
                         images[y, x].color = color;
                     }
                 }
@@ -183,13 +215,11 @@ public class MazeManager : MonoBehaviour
         {
             if (!image)
                 continue;
-            Color color = image.color;
-            color.a = 1;
-            image.color = color;
+            image.color = new Color(image.color.r, image.color.g, image.color.b, fadeIn ? 1 : 0);
         }
     }
 
-    private IEnumerator FadeInRoad(int col, int row, float totalFadeDuration)
+    private IEnumerator FadeRoad(int col, int row, float totalFadeDuration, bool fadeIn)
     {
         float elapsedTime = 0f;
         float fadeDuration = 1f;
@@ -219,14 +249,14 @@ public class MazeManager : MonoBehaviour
                     {
                         Color color = images[y, x, Direction.Horizontal].color;
                         float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - xy * (x + y), 0f) / fadeDuration); // 左から右にFadeInしたい場合
-                        color.a = alpha;
+                        color.a = fadeIn ? alpha : 1 - alpha;
                         images[y, x, Direction.Horizontal].color = color;
                     }
                     if (roads[y, x, Direction.Vertical])
                     {
                         Color color = images[y, x, Direction.Vertical].color;
                         float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - xy * (x + y), 0f) / fadeDuration); // 左から右にFadeInしたい場合
-                        color.a = alpha;
+                        color.a = fadeIn ? alpha : 1 - alpha;
                         images[y, x, Direction.Vertical].color = color;
                     }
                 }
@@ -238,13 +268,21 @@ public class MazeManager : MonoBehaviour
         {
             if (!image)
                 continue;
-            image.color = new Color(image.color.r, image.color.g, image.color.b, 1);
+            image.color = new Color(image.color.r, image.color.g, image.color.b, fadeIn ? 1 : 0);
         }
     }
 
     private void InitMaze(int col, int row)
     {
         DigStart(col, row);
+        unexplored = 0;
+        for (int y = 0; y < row; y++)
+        {
+            for (int x = 0; x < col; x++)
+            {
+                unexplored += walkableGrid[y, x] ? 1 : 0;
+            }
+        }
         // DebugShowMaze();
     }
 
@@ -334,7 +372,7 @@ public class MazeManager : MonoBehaviour
     //     Debug.Log(buff);
     // }
 
-    private bool IsInside(int x, int y)
+    public bool IsInside(int x, int y)
     {
         return 0 <= x && x < col && 0 <= y && y < row;
     }
@@ -382,7 +420,7 @@ public class MazeManager : MonoBehaviour
                 )
                 .ToArray();
 
-            if (ConfigLoader.GetConfig().maze.droprate >= 100)
+            if (ConfigLoader.GetConfig().maze.droprate >= 1)
             {
                 foreach (var wall in walls)
                 {
@@ -391,7 +429,7 @@ public class MazeManager : MonoBehaviour
                 return;
             }
 
-            int breakNum = (int)(walls.Count() * (ConfigLoader.GetConfig().maze.droprate / 100.0f));
+            int breakNum = (int)(walls.Count() * ConfigLoader.GetConfig().maze.droprate);
             MyUtil.Shuffle(walls);
             var toBreak = walls.Take(breakNum).ToList();
             while (true)
@@ -426,7 +464,7 @@ public class MazeManager : MonoBehaviour
     // マスが通れるかどうかを判定
     public bool CanMoveTo(int x, int y)
     {
-        return walkableGrid[y, x] && !characterGrid[y, x];
+        return walkableGrid[y, x] && !dollGrid[y, x];
     }
 
     private void InitTiles(int col, int row)

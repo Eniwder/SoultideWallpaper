@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
     [SerializeField] private MazeManager maze;
     [SerializeField] private DollManager doll;
+    [SerializeField] private ScoreManager score;
 
     private void Awake()
     {
@@ -19,7 +20,8 @@ public class GameManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             maze.Initialize();
             doll.Initialize();
-            StartCoroutine(StartGame());
+            score.Initialize();
+            StartGame();
         }
         else
         {
@@ -27,17 +29,33 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public IEnumerator StartGame()
+    public void StartGame()
     {
-        yield return MazeManager.Instance.CreateMaze();
-        yield return DollManager.Instance.SpawnDoll();
+        StartCoroutine(helper());
+        IEnumerator helper()
+        {
+            yield return MazeManager.Instance.CreateMaze();
+            yield return DollManager.Instance.SpawnDoll();
+        }
+    }
+
+    public void FinishGame()
+    {
+        StartCoroutine(helper());
+        IEnumerator helper()
+        {
+            yield return DollManager.Instance.EscapeDoll();
+            yield return MazeManager.Instance.DeleteMaze();
+            StartGame();
+        }
+
     }
 
     public void ResetGame()
     {
         MazeManager.Instance.CleanMaze();
         DollManager.Instance.CleanDoll();
-        StartCoroutine(StartGame());
+        StartGame();
     }
 
 

@@ -31,24 +31,8 @@ public class WindowSetting : MonoBehaviour
             Texture2D texture = DownloadHandlerTexture.GetContent(request);
             backgroundImage.texture = texture;
             backgroundImage.color = new Color(255, 255, 255, 1);
-            FitToScreen(backgroundImage);
         }
 
     }
-
-    private void FitToScreen(RawImage rawImage)
-    {
-        // RawImage の RectTransform を取得
-        RectTransform rt = rawImage.rectTransform;
-
-        // アンカーを画面全体に設定 (四隅にセット)
-        rt.anchorMin = Vector2.zero; // 左下 (0, 0)
-        rt.anchorMax = Vector2.one;  // 右上 (1, 1)
-
-        // オフセットを0に設定して、画面全体にフィット
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-    }
-
 }
 

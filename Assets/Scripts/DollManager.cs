@@ -12,6 +12,7 @@ public class DollManager : MonoBehaviour
     public string[] dollList;
     public List<GameObject> dolls;
     public RectTransform canvasRectTransform;
+    private bool closing = false;
 
     public void Initialize()
     {
@@ -29,7 +30,7 @@ public class DollManager : MonoBehaviour
 
     public void Update()
     {
-        if (Instance == null || dolls.Count < 1) return;
+        if (Instance == null || dolls.Count < 1 || closing) return;
         SortDollsByPosition();
     }
 
@@ -56,7 +57,9 @@ public class DollManager : MonoBehaviour
 
     public IEnumerator SpawnDoll()
     {
-        dollList = getDolls(ConfigLoader.GetConfig().doll.num);
+        closing = false;
+        int dollNum = ConfigLoader.GetConfig().doll.num < 1 ? getFitDollNum() : ConfigLoader.GetConfig().doll.num;
+        dollList = getDolls(dollNum);
         var walkableGridPosList = new List<Vector2Int>();
         for (int y = 0; y < MazeManager.Instance.row; y++)
         {
@@ -76,12 +79,37 @@ public class DollManager : MonoBehaviour
             GameObject prefab = Resources.Load<GameObject>("Prefabs/Spine/" + dollList[i]);
             GameObject doll = Instantiate(prefab, canvasRectTransform);
             DollBehaviour dollScript = doll.GetComponent<DollBehaviour>();
+            dollScript.currentPos = new Vector2Int(walkableGridPos[i].x, walkableGridPos[i].y);
             RectTransform trt = MazeManager.Instance.tiles[walkableGridPos[i].y, walkableGridPos[i].x].GetComponent<RectTransform>();
             doll.transform.position = trt.position;
             dolls.Add(doll);
             yield return new WaitForSeconds(0.3f);
-            MazeManager.Instance.walked(walkableGridPos[i].x, walkableGridPos[i].y);
         }
+
+        int getFitDollNum()
+        {
+            return (int)((MazeManager.Instance.col + MazeManager.Instance.row) * 0.5);
+        }
+    }
+
+    public IEnumerator EscapeDoll()
+    {
+        closing = true;
+        foreach (var doll in dolls)
+        {
+            DollBehaviour dollScript = doll.GetComponent<DollBehaviour>();
+            dollScript.escape = true;
+        }
+        bool allEscape = false;
+        while (!allEscape)
+        {
+            allEscape = true;
+            foreach (var doll in dolls)
+            {
+                yield return allEscape = allEscape && (doll == null);
+            }
+        }
+        dolls.Clear();
     }
 
     private string[] getDolls(int num)

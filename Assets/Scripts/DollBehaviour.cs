@@ -3,50 +3,198 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Spine.Unity;
+using System.Linq;
 
 public class DollBehaviour : MonoBehaviour
 {
     public SkeletonGraphic skel;
-    private int count = 0;
     public Vector2Int currentPos;
-
-    [SpineAnimation]
-    public string listOfAllAnimations;
     private static System.Random random = new System.Random();
-    // fall,drag,revive,teleport
+    private string[] _normalAnims = { "duration", "dig", "eat", "gather", "hack", "homeInsert", "idle", "sit", "sleep", "mine" };
+    private string[] normalAnims;
+    public bool escape = false;
+    // private Dictionary<string, float> animDuration = new Dictionary<string, float>(){
+    //   {"gather", 0.5f },
+    //   {"dig", 0.5f},
+    //   {"hack", 0.5f},
+    //   {"mine", 0.5f},
+    //   {"eat", 0.5f},
+    //   {"homeInsert", 0.5f},
+    //   {"idle", 0.5f},
+    //   {"sit", 0.5f},
+    //   {"sleep", 0.5f},
+    //   {"walk", 0.5f }
+    // };
+
+    private Dictionary<string, float> animDuration = new Dictionary<string, float>(){
+      {"gather", 3f },
+      {"dig", 4f},
+      {"hack", 5f},
+      {"mine", 6f},
+      {"eat", 12f},
+      {"homeInsert", 12f},
+      {"idle", 2f},
+      {"sit", 8f},
+      {"sleep", 18f},
+      {"walk", 2f }
+    };
     void Start()
     {
         skel = GetComponent<SkeletonGraphic>();
-        // skel.AnimationState.ClearTrack(0);
-        // skel.AnimationState.SetAnimation(0, "teleport", false);
-        Debug.Log(skel.SkeletonData.Animations.Items[0]);
+        MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = true;
+        skel.AnimationState.Complete += OnInit;
+        skel.Skeleton.ScaleX = random.NextDouble() > 0.5 ? 1 : -1;
+
+        normalAnims = skel.SkeletonData.Animations.Items
+                            .Where(item => _normalAnims.Any(anim => item.ToString().Contains(anim)))
+                            .Select(animation => animation.ToString()).ToArray();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void idling()
     {
-        count++;
-        if (count % 120 == 0)
+        StartCoroutine(PlayAnimationForDuration("idle", animDuration["idle"], false));
+    }
+
+    private void randomMotion()
+    {
+        if (random.NextDouble() <= ConfigLoader.GetConfig().doll.walkrate)
         {
-            skel.AnimationState.SetAnimation(0, skel.SkeletonData.Animations.Items[random.Next(skel.SkeletonData.Animations.Items.Length)], true);
+            var walkables = walkableCand();
+            if (walkables.Length > 0)
+            {
+                StartCoroutine(Move(walkables[random.Next(walkables.Length)]));
+                return;
+            }
+        }
+        var anim = normalAnims[random.Next(normalAnims.Length)];
+        addScore(anim);
+        StartCoroutine(PlayAnimationForDuration(anim, animDuration.GetValueOrDefault(anim, animDuration["homeInsert"]), true));
+    }
+
+    private void addScore(string anim)
+    {
+        if (anim == "gather")
+        {
+            ScoreManager.Instance.AddScore(1);
+        }
+        else if (anim == "dig")
+        {
+            ScoreManager.Instance.AddScore(2);
+
+        }
+        else if (anim == "hack")
+        {
+            ScoreManager.Instance.AddScore(3);
+
+        }
+        else if (anim == "mine")
+        {
+            ScoreManager.Instance.AddScore(4);
+
         }
     }
 
-    private void Move()
+    private IEnumerator PlayAnimationForDuration(string anim, float time, bool nextIdle)
     {
-        Vector2Int nextPos = GetRandomNextPosition();
+        skel.AnimationState.SetAnimation(0, anim, true);
+        yield return new WaitForSeconds(time);
+        skel.AnimationState.SetEmptyAnimation(0, 0);
+        if (nextIdle)
+        {
+            idling();
+        }
+        else
+        {
+            if (escape)
+            {
+                fallReverse();
+            }
+            else
+            {
+                randomMotion();
+            }
 
-        // if (GridManager.Instance.IsCellFree(nextPos.x, nextPos.y)) {
-        //     GridManager.Instance.SetCellState(currentPos.x, currentPos.y, false);  // 現在位置を空にする
-        //     currentPos = nextPos;
-        //     GridManager.Instance.SetCellState(currentPos.x, currentPos.y, true);   // 新しい位置を占有
-        //     transform.position = new Vector3(currentPos.x, currentPos.y, 0);      // 実際の移動
-        // }
+        }
     }
 
-    private Vector2Int GetRandomNextPosition()
+    private void OnInit(Spine.TrackEntry trackEntry)
     {
-        // 隣接するマスをランダムに取得するロジック
-        return new Vector2Int(currentPos.x + Random.Range(-1, 2), currentPos.y + Random.Range(-1, 2));
+        MazeManager.Instance.walked(currentPos.x, currentPos.y);
+        idling();
+        skel.AnimationState.Complete -= OnInit;
+        return;
     }
+
+    private Vector2Int[] walkableCand()
+    {
+        var ret = new List<Vector2Int>();
+        int[] dxs = { -1, 1, 0, 0 };
+        int[] dys = { 0, 0, -1, 1 };
+        for (int i = 0; i < 4; i++)
+        {
+            int dx = currentPos.x + dxs[i];
+            int dy = currentPos.y + dys[i];
+            if (MazeManager.Instance.IsInside(dx, dy) &&
+             MazeManager.Instance.walkableGrid[dy, dx] && !MazeManager.Instance.dollGrid[dy, dx])
+            {
+                // 未踏破のタイルは2倍の候補数にして進む増やす
+                if (!MazeManager.Instance.exploredGrid[dy, dx])
+                {
+                    ret.Add(new Vector2Int(dx, dy));
+                }
+                ret.Add(new Vector2Int(dx, dy));
+            }
+        }
+        return ret.ToArray();
+    }
+
+    private void fallReverse()
+    {
+        var track = skel.AnimationState.SetAnimation(0, "fall", false);
+        track.TimeScale = 0f;
+        StartCoroutine(helper());
+
+        IEnumerator helper()
+        {
+            for (float i = 0f; i < track.AnimationEnd; i += 0.016f)
+            {
+                yield return track.TrackTime = (track.AnimationEnd - i);
+            }
+            track.TrackTime = 0f;
+            Destroy(gameObject);
+        }
+    }
+
+
+    private IEnumerator Move(Vector2Int nextPos)
+    {
+        skel.AnimationState.SetAnimation(0, "walk", true);
+        skel.Skeleton.ScaleX = (currentPos.x + currentPos.y) < (nextPos.x + nextPos.y) ? -1 : 1;
+
+        RectTransform crt = MazeManager.Instance.tiles[currentPos.y, currentPos.x].GetComponent<RectTransform>();
+        RectTransform drt = MazeManager.Instance.tiles[nextPos.y, nextPos.x].GetComponent<RectTransform>();
+        // 歩き終わる前に存在判定を更新しておくことで、他のキャラと交差できるようになる
+        MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = false;
+        currentPos = nextPos;
+        MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = true;
+        yield return StartCoroutine(helper(crt.position, drt.position, animDuration["walk"]));
+        MazeManager.Instance.walked(currentPos.x, currentPos.y);
+        idling();
+
+        IEnumerator helper(Vector2 cpos, Vector2 dpos, float duration)
+        {
+            Vector2 diff = dpos - cpos;
+            Vector2 step = diff / duration;
+            float elapsedTime = 0f;
+            while (elapsedTime < duration)
+            {
+                gameObject.GetComponent<RectTransform>().position = cpos + (elapsedTime * step);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+            gameObject.GetComponent<RectTransform>().position = dpos;
+        }
+    }
+
+
 }
