@@ -23,14 +23,6 @@ public class ScoreManager : MonoBehaviour
         }
 
     }
-
-    // private void Update()
-    // {
-    //     // スコアを表示する
-    //     scoreText.text = score.ToString() + " pt";
-    // }
-
-    // スコアを増やすメソッド
     public void AddScore(int value)
     {
         score += value;

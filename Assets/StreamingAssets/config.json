@@ -99,6 +99,7 @@
     ]
   },
   "fps": 60,
+  "trayicon": true,
   "///////////// 説明 /////////////": {
     "****": "以下は説明用パラメータなのでいじっても無意味です。",
     "オリジナルファイル": "https://github.com/Eniwder/SoultideWallpaper/blob/main/Assets/StreamingAssets/config.json",
@@ -115,6 +116,7 @@
       "walkrate": "[0≦droprate≦1] 歩く確率。",
       "cand": "登場するキャラの候補。Name_02などはスキンを表す。好きなキャラや所持していたコスだけ登場させたい場合などに設定する"
     },
-    "fps": "[1<fps<N] フレームレートを指定できる。"
+    "fps": "[1<fps<N] フレームレートを指定できる。",
+    "trayicon": "[true|false] システムトレイへの表示/非表示を変更できる。非表示にするとタスクマネージャーからしか終了できなくなる。"
   }
 }
