@@ -13,31 +13,18 @@ public class DollBehaviour : MonoBehaviour
     private string[] _normalAnims = { "duration", "dig", "eat", "gather", "hack", "homeInsert", "idle", "sit", "sleep", "mine" };
     private string[] normalAnims;
     public bool escape = false;
-    // private Dictionary<string, float> animDuration = new Dictionary<string, float>(){
-    //   {"gather", 0.5f },
-    //   {"dig", 0.5f},
-    //   {"hack", 0.5f},
-    //   {"mine", 0.5f},
-    //   {"eat", 0.5f},
-    //   {"homeInsert", 0.5f},
-    //   {"idle", 0.5f},
-    //   {"sit", 0.5f},
-    //   {"sleep", 0.5f},
-    //   {"walk", 0.5f }
-    // };
-
-    private Dictionary<string, float> animDuration = new Dictionary<string, float>(){
-      {"gather", 3f },
-      {"dig", 4f},
-      {"hack", 5f},
-      {"mine", 6f},
-      {"eat", 12f},
-      {"homeInsert", 12f},
-      {"idle", 2f},
-      {"sit", 8f},
-      {"sleep", 18f},
-      {"walk", 2f }
-    };
+    private static Dictionary<string, WaitForSeconds> AnimDuration = new Dictionary<string, WaitForSeconds>(){
+      {"gather", new WaitForSeconds(3f) },
+      {"dig", new WaitForSeconds(4f)},
+      {"hack", new WaitForSeconds(5f)},
+      {"mine", new WaitForSeconds(6f)},
+      {"eat", new WaitForSeconds(12f)},
+      {"homeInsert", new WaitForSeconds(12f)},
+      {"idle", new WaitForSeconds(2f)},
+      {"sit", new WaitForSeconds(8f)},
+      {"sleep", new WaitForSeconds(18f)}
+     };
+    private float walkTime = 2f;
     void Start()
     {
         skel = GetComponent<SkeletonGraphic>();
@@ -52,7 +39,7 @@ public class DollBehaviour : MonoBehaviour
 
     private void Idling()
     {
-        StartCoroutine(PlayAnimationForDuration("idle", animDuration["idle"], false));
+        StartCoroutine(PlayAnimationForDuration("idle", AnimDuration["idle"], false));
     }
 
     private void RandomMotion()
@@ -68,7 +55,7 @@ public class DollBehaviour : MonoBehaviour
         }
         var anim = normalAnims[random.Next(normalAnims.Length)];
         AddScore(anim);
-        StartCoroutine(PlayAnimationForDuration(anim, animDuration.GetValueOrDefault(anim, animDuration["homeInsert"]), true));
+        StartCoroutine(PlayAnimationForDuration(anim, AnimDuration.GetValueOrDefault(anim, AnimDuration["homeInsert"]), true));
     }
 
     private void AddScore(string anim)
@@ -94,10 +81,10 @@ public class DollBehaviour : MonoBehaviour
         }
     }
 
-    private IEnumerator PlayAnimationForDuration(string anim, float time, bool nextIdle)
+    private IEnumerator PlayAnimationForDuration(string anim, WaitForSeconds wait, bool nextIdle)
     {
         skel.AnimationState.SetAnimation(0, anim, true);
-        yield return new WaitForSeconds(time);
+        yield return wait;
         skel.AnimationState.SetEmptyAnimation(0, 0);
         if (nextIdle)
         {
@@ -158,7 +145,8 @@ public class DollBehaviour : MonoBehaviour
         {
             for (float i = 0f; i < track.AnimationEnd; i += 0.016f)
             {
-                yield return track.TrackTime = (track.AnimationEnd - i);
+                track.TrackTime = (track.AnimationEnd - i);
+                yield return null;
             }
             track.TrackTime = 0f;
             Destroy(gameObject);
@@ -177,7 +165,7 @@ public class DollBehaviour : MonoBehaviour
         MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = false;
         currentPos = nextPos;
         MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = true;
-        yield return StartCoroutine(Helper(crt.position, drt.position, animDuration["walk"]));
+        yield return StartCoroutine(Helper(crt.position, drt.position, walkTime));
         MazeManager.Instance.walked(currentPos.x, currentPos.y);
         Idling();
 

@@ -27,12 +27,11 @@ public class DollManager : MonoBehaviour
         }
     }
 
-
-    public void Update()
-    {
-        if (Instance == null || dolls.Count < 1 || closing) return;
-        SortDollsByPosition();
-    }
+    // public void Update()
+    // {
+    //     if (Instance == null || dolls.Count < 1 || closing) return;
+    //     SortDollsByPosition();
+    // }
 
     public void CleanDoll()
     {
@@ -74,6 +73,7 @@ public class DollManager : MonoBehaviour
 
         var walkableGridPos = walkableGridPosList.ToArray();
         MyUtil.Shuffle(walkableGridPos);
+        var wait = new WaitForSeconds(0.3f);
         for (int i = 0; i < dollList.Length && i < walkableGridPos.Length; i++)
         {
             GameObject prefab = Resources.Load<GameObject>("Prefabs/Spine/" + dollList[i]);
@@ -83,7 +83,7 @@ public class DollManager : MonoBehaviour
             RectTransform trt = MazeManager.Instance.tiles[walkableGridPos[i].y, walkableGridPos[i].x].GetComponent<RectTransform>();
             doll.transform.position = trt.position;
             dolls.Add(doll);
-            yield return new WaitForSeconds(0.3f);
+            yield return wait;
         }
 
         int getFitDollNum()

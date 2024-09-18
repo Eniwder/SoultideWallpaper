@@ -36,6 +36,8 @@ public class GameManager : MonoBehaviour
         {
             yield return MazeManager.Instance.CreateMaze();
             yield return DollManager.Instance.SpawnDoll();
+
+            Resources.UnloadUnusedAssets();
         }
     }
 
@@ -46,6 +48,11 @@ public class GameManager : MonoBehaviour
         {
             yield return DollManager.Instance.EscapeDoll();
             yield return MazeManager.Instance.DeleteMaze();
+            //GC
+            System.GC.Collect();
+            //使ってないアセットをアンロード
+            Resources.UnloadUnusedAssets();
+            yield return new WaitForSeconds(3f);
             StartGame();
         }
 

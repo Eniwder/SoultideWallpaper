@@ -4,6 +4,9 @@
 *.meta
 *.prefab
 *.asset
+bin/
+obj/
+*.dll
 build/
 Temp/
 Logs/
@@ -15,3 +18,5 @@ Settings/
 Packages/
 Library/
 Plugins/
+Editor/
+ExResources/

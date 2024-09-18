@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework> <!-- .NET 6.0 またはそれ以降を指定 -->
+    <LangVersion>10.0</LangVersion> <!-- C# 10.0 以上を指定 -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>WinExe</OutputType>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>appicon.ico</ApplicationIcon>
+
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWPF>false</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Windows.Forms" Version="*" />
+    <PackageReference Include="System.Drawing.Common" Version="*" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <!-- アイコンファイルの追加 -->
+    <None Update="appicon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

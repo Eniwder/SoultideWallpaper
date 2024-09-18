@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.U2D;
 public static class Direction
 {
     public const int Horizontal = 0;
@@ -24,12 +25,13 @@ public class MazeManager : MonoBehaviour
 
     // 描画用
     public GameObject tilePrefab;
-    public Sprite tileActive;
-    public Sprite tileDeactive;
+    public SpriteAtlas mazeAtlas;
+    private Sprite tileActive;
+    private Sprite tileDeactive;
 
     public GameObject roadPrefab;
-    public Sprite roadActive;
-    public Sprite roadDeactive;
+    private Sprite roadActive;
+    private Sprite roadDeactive;
 
 
     public RectTransform canvasRectTransform;
@@ -44,6 +46,11 @@ public class MazeManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            tileActive = mazeAtlas.GetSprite("Tile_White");
+            tileDeactive = mazeAtlas.GetSprite("Tile_Black");
+            roadActive = mazeAtlas.GetSprite("Route_White");
+            roadDeactive = mazeAtlas.GetSprite("Route_Black");
         }
         else
         {
@@ -191,7 +198,7 @@ public class MazeManager : MonoBehaviour
                 }
             }
         }
-        float xy = (totalFadeDuration - fadeDuration) / (col + row + 0.01f);　// 左から右にFadeInしたい場合
+        float xy = (totalFadeDuration - fadeDuration) / (col + row + 0.01f); // 左から右にFadeInしたい場合
         while (elapsedTime < totalFadeDuration)
         {
             for (int y = 0; y < row; y++)
@@ -202,7 +209,7 @@ public class MazeManager : MonoBehaviour
                     {
                         Color color = images[y, x].color;
                         float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - xy * (x + y), 0f) / fadeDuration); // 左から右にFadeInしたい場合
-                        // float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - randomDelays[y, x], 0f) / fadeDuration);
+                                                                                                               // float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - randomDelays[y, x], 0f) / fadeDuration);
                         color.a = fadeIn ? alpha : 1 - alpha;
                         images[y, x].color = color;
                     }
@@ -238,7 +245,7 @@ public class MazeManager : MonoBehaviour
                 }
             }
         }
-        float xy = (totalFadeDuration - fadeDuration) / (col + row + 0.01f);　// 左から右にFadeInしたい場合
+        float xy = (totalFadeDuration - fadeDuration) / (col + row + 0.01f); // 左から右にFadeInしたい場合
         while (elapsedTime < totalFadeDuration)
         {
             for (int y = 0; y < row; y++)
