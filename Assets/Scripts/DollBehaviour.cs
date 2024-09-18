@@ -166,6 +166,7 @@ public class DollBehaviour : MonoBehaviour
         currentPos = nextPos;
         MazeManager.Instance.dollGrid[currentPos.y, currentPos.x] = true;
         yield return StartCoroutine(Helper(crt.position, drt.position, walkTime));
+        DollManager.Instance.SortDollsByPosition();
         MazeManager.Instance.walked(currentPos.x, currentPos.y);
         Idling();
 
@@ -173,14 +174,15 @@ public class DollBehaviour : MonoBehaviour
         {
             Vector2 diff = dpos - cpos;
             Vector2 step = diff / duration;
+            RectTransform crt = gameObject.GetComponent<RectTransform>();
             float elapsedTime = 0f;
             while (elapsedTime < duration)
             {
-                gameObject.GetComponent<RectTransform>().position = cpos + (elapsedTime * step);
+                crt.position = cpos + (elapsedTime * step);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
-            gameObject.GetComponent<RectTransform>().position = dpos;
+            crt.position = dpos;
         }
     }
 

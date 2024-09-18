@@ -1,16 +1,17 @@
 ﻿using System.Runtime.InteropServices;
 using System.Diagnostics;
-
+using System.Windows.Forms;
+using System.Drawing;
 class WallpaperWindow
 {
     private const uint SMTO_NORMAL = 0x0000;
     private const int WM_SHELLHOOK = 0x052C;
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+    private static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+    private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string? lpszWindow);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -50,18 +51,34 @@ class WallpaperWindow
 class Program
 {
     static NotifyIcon trayIcon = new NotifyIcon();
+    static Process? exeProcess = null;
+
     static void Main(string[] args)
     {
         IntPtr hwnd = WallpaperWindow.GetWallpaperWindow();
         Console.WriteLine("Wallpaper Window Handle: " + hwnd.ToString("X"));
-        var path = "./bin/SoultideWallpaper.exe";
+        string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin", "SoultideWallpaper.exe");
+
+        Directory.SetCurrentDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "bin"));
         var cmdline = $"-parentHWND {hwnd}";//子ウィンドウとして起動
-        Process exe = Process.Start(path, cmdline);
+        exeProcess = Process.Start(path, cmdline);
 
         trayIcon.Text = "SoultideWallpaper";
-        trayIcon.Icon = SystemIcons.Application; // 標準のアイコンを使用
+        string iconFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appicon.ico");
+        if (File.Exists(iconFilePath))
+        {
+            using (FileStream fs = new FileStream(iconFilePath, FileMode.Open, FileAccess.Read))
+            {
+                trayIcon.Icon = new Icon(fs);
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Icon file not found: {iconFilePath}");
+            trayIcon.Icon = SystemIcons.Application; // アイコンファイルが見つからない場合はデフォルトアイコンを使用
+        }
 
-        // タスクトレイのコンテキストメニューを作成
+        // // タスクトレイのコンテキストメニューを作成
         ContextMenuStrip contextMenu = new ContextMenuStrip();
         ToolStripMenuItem exitMenuItem = new ToolStripMenuItem("Exit", null, OnExit);
         contextMenu.Items.Add(exitMenuItem);
@@ -70,11 +87,16 @@ class Program
 
         // タスクトレイにアイコンを表示
         trayIcon.Visible = true;
+        Application.Run();
 
     }
     static void OnExit(object? sender, EventArgs e)
     {
         trayIcon.Visible = false;
+        if (exeProcess != null && !exeProcess.HasExited)
+        {
+            exeProcess.Kill(); // プロセスを強制終了
+        }
         Application.Exit();
     }
 }

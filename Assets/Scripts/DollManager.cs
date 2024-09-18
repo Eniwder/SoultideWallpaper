@@ -27,12 +27,6 @@ public class DollManager : MonoBehaviour
         }
     }
 
-    // public void Update()
-    // {
-    //     if (Instance == null || dolls.Count < 1 || closing) return;
-    //     SortDollsByPosition();
-    // }
-
     public void CleanDoll()
     {
         foreach (var doll in dolls)
@@ -43,9 +37,9 @@ public class DollManager : MonoBehaviour
     }
 
     // Y座標に基づいてキャラクターをソートする TODO パフォーマンスへの影響
-    private void SortDollsByPosition()
+    public void SortDollsByPosition()
     {
-
+        if (Instance == null || dolls.Count < 1 || closing) return;
         var sortedDolls = dolls.OrderByDescending(c => c.GetComponent<RectTransform>().anchoredPosition.y).ToArray();
 
         for (int i = 0; i < sortedDolls.Length; i++)

@@ -11,7 +11,6 @@ public static class ConfigLoader
         public DollConfig doll;
         public int fps;
         public bool score;
-        public bool trayicon;
     }
 
     [System.Serializable]
