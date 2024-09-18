@@ -6,6 +6,8 @@
 zipを展開後、中にある「WallpaperApp.exe」を実行すると動作する。
 
 ### 概要
+![sample](https://github.com/user-attachments/assets/6ae8314c-8938-4c2f-8507-4427084ca074)
+
 Windowsの壁紙を、ソウルタイド風のマップとSDキャラが動く壁紙に上書きする非公式アプリ。
 
 擬似的に背景にしているだけなので、システムトレイからアプリを終了すると元の壁紙に戻ります。
