@@ -14,7 +14,7 @@ public class ScoreManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             score = PlayerPrefs.GetInt("Score", 0);
-            scoreText.text = score.ToString() + " pt";
+            scoreText.text = score.ToString();
             scoreText.enabled = ConfigLoader.GetConfig().score;
         }
         else
@@ -26,7 +26,7 @@ public class ScoreManager : MonoBehaviour
     public void AddScore(int value)
     {
         score += value;
-        scoreText.text = score.ToString() + " pt";
+        scoreText.text = score.ToString();
     }
 
     public void SaveScore()
