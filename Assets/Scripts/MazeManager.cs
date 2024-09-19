@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.U2D;
+
 public static class Direction
 {
     public const int Horizontal = 0;
@@ -19,8 +20,8 @@ public class MazeManager : MonoBehaviour
     private int unexplored;
 
 
+    private MazePool pool = new MazePool();
     public GameObject[,,] roads;
-
     public GameObject[,] tiles;
 
     // 描画用
@@ -38,7 +39,11 @@ public class MazeManager : MonoBehaviour
 
     public int col;
     public int row;
-    private float totalFadeDuration = 10f; // TODO
+#if UNITY_EDITOR
+    private float totalFadeDuration = 2f;
+#else
+    private float totalFadeDuration = 10f;
+#endif
 
     public void Initialize()
     {
@@ -82,34 +87,9 @@ public class MazeManager : MonoBehaviour
 
         InitMaze(col, row);
         InitTiles(col, row);
-
         InitRoads(col, row);
 
-        // GenerateRoads();
         yield return StartCoroutine(FadeInMaze(col, row));
-
-        // タイルを結ぶRouteの作成
-        // exploredGridに応じてタイルの状態を変更
-        // exploredGridに応じて？ルートの状態を変更
-        // Image image = tiles[3, 3].GetComponent<Image>();
-        // image.sprite = tileActive;
-    }
-
-    public void CleanMaze()
-    {
-        dollGrid = new bool[row, col];
-        walkableGrid = new bool[row, col];
-        exploredGrid = new bool[row, col];
-        foreach (var tile in tiles)
-        {
-            Destroy(tile);
-        }
-        foreach (var road in roads)
-        {
-            Destroy(road);
-        }
-        tiles = new GameObject[row, col];
-        roads = new GameObject[row, col, 2];
     }
 
     public void walked(int x, int y)
@@ -152,19 +132,20 @@ public class MazeManager : MonoBehaviour
     public IEnumerator DeleteMaze()
     {
         yield return StartCoroutine(FadeOutMaze(col, row));
-        dollGrid = new bool[row, col];
-        walkableGrid = new bool[row, col];
-        exploredGrid = new bool[row, col];
         foreach (var tile in tiles)
         {
-            Destroy(tile);
+            if (tile != null)
+            {
+                pool.ReturnTile(tile);
+            }
         }
         foreach (var road in roads)
         {
-            Destroy(road);
+            if (road != null)
+            {
+                pool.ReturnRoad(road);
+            }
         }
-        tiles = new GameObject[row, col];
-        roads = new GameObject[row, col, 2];
     }
 
     private IEnumerator FadeOutMaze(int col, int row)
@@ -320,8 +301,8 @@ public class MazeManager : MonoBehaviour
 
         GameObject CreateRoad(int x, int y, int direction)
         {
-            GameObject road = Instantiate(roadPrefab, canvasRectTransform);
-
+            // GameObject road = Instantiate(roadPrefab, canvasRectTransform);
+            GameObject road = pool.GetRoad(roadPrefab, canvasRectTransform);
 
             Image image = road.GetComponent<Image>();
             image.sprite = roadDeactive;
@@ -330,9 +311,6 @@ public class MazeManager : MonoBehaviour
             RectTransform trt = tiles[y, x].GetComponent<RectTransform>();
             RectTransform rrt = road.GetComponent<RectTransform>();
             rrt.SetSiblingIndex(1);
-
-            // rrt.SetSiblingIndex(tileGameObject.transform.GetSiblingIndex() + 1);
-
 
             if (direction == Direction.Horizontal)
             {
@@ -365,20 +343,6 @@ public class MazeManager : MonoBehaviour
         }
     }
 
-    // private void DebugShowMaze()
-    // {
-    //     string buff = "";
-    //     for (int y = 0; y < row; y++)
-    //     {
-    //         for (int x = 0; x < col; x++)
-    //         {
-    //             buff += walkableGrid[y, x] ? "□" : "■";
-    //         }
-    //         buff += "\n";
-    //     }
-    //     Debug.Log(buff);
-    // }
-
     public bool IsInside(int x, int y)
     {
         return 0 <= x && x < col && 0 <= y && y < row;
@@ -388,10 +352,6 @@ public class MazeManager : MonoBehaviour
     {
         int startX = random.Next(0, col - 2);
         int startY = random.Next(0, row - 2);
-        // if (startY % 2 == 0)
-        //     startY++;
-        // if (startX % 2 == 0)
-        //     startX++;
         Dig(startX, startY);
         randomDig(col, row);
 
@@ -450,7 +410,7 @@ public class MazeManager : MonoBehaviour
                     }
                     else
                     {
-                        rest.Append(xy);
+                        rest.Enqueue(xy);
                     }
                 }
                 if (toBreak.Count() == rest.Count())
@@ -476,9 +436,6 @@ public class MazeManager : MonoBehaviour
 
     private void InitTiles(int col, int row)
     {
-        // float tileWidth = tileActive.rect.width * 0.5f;
-        // float tileHeight = tileActive.rect.height * 0.5f;
-
         RectTransform rectTransform = tilePrefab.GetComponent<RectTransform>();
         float tileWidth = rectTransform.rect.width;
         float tileHeight = rectTransform.rect.height;
@@ -512,7 +469,8 @@ public class MazeManager : MonoBehaviour
 
         void CreateTile(int x, int y)
         {
-            GameObject tile = Instantiate(tilePrefab, canvasRectTransform);
+            // GameObject tile = Instantiate(tilePrefab, canvasRectTransform);
+            GameObject tile = pool.GetTile(tilePrefab, canvasRectTransform);
             tiles[y, x] = tile;
             Image image = tile.GetComponent<Image>();
             image.sprite = tileDeactive;
@@ -531,6 +489,53 @@ public class MazeManager : MonoBehaviour
 
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+        }
+    }
+    class MazePool
+    {
+        private Queue<GameObject> tiles = new Queue<GameObject>();
+        private Queue<GameObject> roads = new Queue<GameObject>();
+
+        public GameObject GetTile(GameObject tilePrefab, Transform parent)
+        {
+            GameObject tile;
+            if (tiles.Count > 0)
+            {
+                tile = tiles.Dequeue();
+                tile.SetActive(true);
+            }
+            else
+            {
+                tile = GameObject.Instantiate(tilePrefab, parent);
+            }
+            return tile;
+        }
+
+        public void ReturnTile(GameObject tile)
+        {
+            tile.SetActive(false);
+            tiles.Enqueue(tile);
+        }
+        public GameObject GetRoad(GameObject roadPrefab, Transform parent)
+        {
+            GameObject road;
+            if (roads.Count > 0)
+            {
+                road = roads.Dequeue();
+                road.SetActive(true);
+            }
+            else
+            {
+                road = GameObject.Instantiate(roadPrefab, parent);
+            }
+            return road;
+        }
+
+        public void ReturnRoad(GameObject road)
+        {
+            road.SetActive(false);
+            road.GetComponent<RectTransform>().localRotation = Quaternion.identity;
+            roads.Enqueue(road);
         }
     }
 }

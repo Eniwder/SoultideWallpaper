@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
+using System;
 public class DollManager : MonoBehaviour
 {
     private static System.Random random = new System.Random();
@@ -13,6 +14,7 @@ public class DollManager : MonoBehaviour
     public List<GameObject> dolls;
     public RectTransform canvasRectTransform;
     private bool closing = false;
+    private RectTransform[] sortedDollsArray;
 
     public void Initialize()
     {
@@ -39,12 +41,11 @@ public class DollManager : MonoBehaviour
     // Y座標に基づいてキャラクターをソートする TODO パフォーマンスへの影響
     public void SortDollsByPosition()
     {
-        if (Instance == null || dolls.Count < 1 || closing) return;
-        var sortedDolls = dolls.OrderByDescending(c => c.GetComponent<RectTransform>().anchoredPosition.y).ToArray();
-
-        for (int i = 0; i < sortedDolls.Length; i++)
+        if (Instance == null || dolls.Count < 1 || closing || sortedDollsArray == null) return;
+        Array.Sort(sortedDollsArray, (a, b) => b.anchoredPosition.y.CompareTo(a.anchoredPosition.y));
+        for (int i = 0; i < sortedDollsArray.Length; i++)
         {
-            sortedDolls[i].transform.SetSiblingIndex(i);
+            sortedDollsArray[i].transform.SetSiblingIndex(i);
         }
     }
 
@@ -68,7 +69,12 @@ public class DollManager : MonoBehaviour
         var walkableGridPos = walkableGridPosList.ToArray();
         MyUtil.Shuffle(walkableGridPos);
         var wait = new WaitForSeconds(0.3f);
-        for (int i = 0; i < dollList.Length && i < walkableGridPos.Length; i++)
+        int maxlen = Mathf.Min(dollList.Length, walkableGridPos.Length);
+        if (sortedDollsArray == null || sortedDollsArray.Length != maxlen)
+        {
+            sortedDollsArray = new RectTransform[maxlen];
+        }
+        for (int i = 0; i < maxlen; i++)
         {
             GameObject prefab = Resources.Load<GameObject>("Prefabs/Spine/" + dollList[i]);
             GameObject doll = Instantiate(prefab, canvasRectTransform);
@@ -76,12 +82,21 @@ public class DollManager : MonoBehaviour
             dollScript.currentPos = new Vector2Int(walkableGridPos[i].x, walkableGridPos[i].y);
             RectTransform trt = MazeManager.Instance.tiles[walkableGridPos[i].y, walkableGridPos[i].x].GetComponent<RectTransform>();
             doll.transform.position = trt.position;
+            sortedDollsArray[i] = doll.GetComponent<RectTransform>();
+            doll.SetActive(false);
             dolls.Add(doll);
+            MazeManager.Instance.dollGrid[walkableGridPos[i].y, walkableGridPos[i].x] = true;
+        }
+        yield return wait;
+        for (int i = 0; i < maxlen; i++)
+        {
+            dolls[i].SetActive(true);
             yield return wait;
         }
 
         int getFitDollNum()
         {
+            // *0.5に特に根拠は無い
             return (int)((MazeManager.Instance.col + MazeManager.Instance.row) * 0.5);
         }
     }
