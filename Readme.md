@@ -26,7 +26,10 @@ Windowsの壁紙を、ソウルタイド風のマップとSDキャラが動く�
 - 詳細設定
   - 「SoultideWallpaper/bin/SoultideWallpaper_Data/StreamingAssets」にある「config.json」を変更することで細かい部分を設定できます。
     - 編集に失敗した場合は「[こちら](https://github.com/Eniwder/SoultideWallpaper/blob/main/Assets/StreamingAssets/config.json)」からコピペし直せば直ると思います。
-- 壁紙とかじゃなくウィンドウとして開きたい場合は、「SoultideWallpaper/bin/SoultideWallpaper.exe」から起動します。
+- 壁紙ではなく単体のアプリとして開きたい場合は、「SoultideWallpaper/bin/SoultideWallpaper.exe」から起動します。
+  - アプリは「Alt+Enter」で全画面とウィンドウを切り替えることができます。
+  - ウィンドウサイズは自由に変更できますが、描画処理の関係上、サイズを変更した後に手動でアプリの再起動を推奨します。
+  - アプリとして起動した場合の終了方法は、ウィンドウ状態でバツボタンを押すか「Alt+F4」で強制終了するかのどちらかです。
 
 ### 探索スコア
 アプリの右下に表示される数値は探索スコアです。環境次第では表示されない問題があるようです。
