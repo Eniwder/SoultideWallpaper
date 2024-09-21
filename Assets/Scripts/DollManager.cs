@@ -98,7 +98,7 @@ public class DollManager : MonoBehaviour
         {
             int max = (MazeManager.Instance.col + MazeManager.Instance.row);
             // 4Kでほぼ最大になるような計算
-            return (int)((max * max) * 0.0065) + 3;
+            return (int)((max * max) * 0.0065) + 2;
         }
     }
 
