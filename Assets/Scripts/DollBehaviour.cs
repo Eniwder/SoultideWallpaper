@@ -38,10 +38,6 @@ public class DollBehaviour : MonoBehaviour
                                 !(gameObject.name.Contains("Hagakure") && (item.ToString() == "homeInsert04")) &&
                                 _normalAnims.Any(anim => item.ToString().Contains(anim)))
                             .Select(animation => animation.ToString()).ToArray();
-        foreach (var anim in normalAnims)
-        {
-            Debug.Log(anim);
-        }
     }
 
     private void Idling()
@@ -216,6 +212,4 @@ public class DollBehaviour : MonoBehaviour
             crt.position = dpos;
         }
     }
-
-
 }

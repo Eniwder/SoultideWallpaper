@@ -38,7 +38,7 @@ public class DollManager : MonoBehaviour
         dolls.Clear();
     }
 
-    // Y座標に基づいてキャラクターをソートする TODO パフォーマンスへの影響
+    // Y座標に基づいてキャラクターをソートする
     public void SortDollsByPosition()
     {
         if (Instance == null || dolls.Count < 1 || closing || sortedDollsArray == null) return;
@@ -96,8 +96,9 @@ public class DollManager : MonoBehaviour
 
         int getFitDollNum()
         {
-            // *0.5に特に根拠は無い
-            return (int)((MazeManager.Instance.col + MazeManager.Instance.row) * 0.5);
+            int max = (MazeManager.Instance.col + MazeManager.Instance.row);
+            // 4Kでほぼ最大になるような計算
+            return (int)((max * max) * 0.0065) + 3;
         }
     }
 
