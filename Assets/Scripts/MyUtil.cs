@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public static class MyUtil
 {
@@ -25,5 +26,23 @@ public static class MyUtil
             buff += v + " @@@ ";
         }
         Debug.Log(buff);
+    }
+
+    public static bool IsWrapped()
+    {
+        // 実行時引数を取得
+        string[] commandLineArgs = System.Environment.GetCommandLineArgs();
+
+        // -parentHWND が含まれているかチェック
+        bool hasParentHWnd = false;
+        for (int i = 0; i < commandLineArgs.Length; i++)
+        {
+            if (commandLineArgs[i].Contains("parentHWND", StringComparison.OrdinalIgnoreCase))
+            {
+                hasParentHWnd = true;
+                break;
+            }
+        }
+        return hasParentHWnd;
     }
 }
