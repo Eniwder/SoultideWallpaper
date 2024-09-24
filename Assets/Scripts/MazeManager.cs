@@ -68,11 +68,11 @@ public class MazeManager : MonoBehaviour
     {
         col = ConfigLoader.GetConfig().maze.col;
         row = ConfigLoader.GetConfig().maze.row;
-        if (col < 1 || row < 1)
+        if (col < 2 || row < 2)
         {
             // 1920x1080のとき、(col+row)<35。これを基準とする。
             // screenWidth/1920*35 ≒ screenWidth*0.01823
-            int maxNum = (int)(Screen.width * 0.01823f);
+            int maxNum = Mathf.Max(4, (int)(Screen.width * 0.01823f));
             int minNum = (int)Mathf.Sqrt(maxNum); // 最小値は大体このくらいでよさそう？
             col = random.Next(minNum, maxNum - minNum);
             row = maxNum - col;
@@ -129,9 +129,27 @@ public class MazeManager : MonoBehaviour
         }
     }
 
-    public IEnumerator DeleteMaze()
+    public IEnumerator FinishMaze()
     {
         yield return StartCoroutine(FadeOutMaze(col, row));
+        foreach (var tile in tiles)
+        {
+            if (tile != null)
+            {
+                pool.ReturnTile(tile);
+            }
+        }
+        foreach (var road in roads)
+        {
+            if (road != null)
+            {
+                pool.ReturnRoad(road);
+            }
+        }
+    }
+
+    public void CleanMaze()
+    {
         foreach (var tile in tiles)
         {
             if (tile != null)
@@ -233,14 +251,14 @@ public class MazeManager : MonoBehaviour
             {
                 for (int x = 0; x < col; x++)
                 {
-                    if (roads[y, x, Direction.Horizontal])
+                    if (images[y, x, Direction.Horizontal])
                     {
                         Color color = images[y, x, Direction.Horizontal].color;
                         float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - xy * (x + y), 0f) / fadeDuration); // 左から右にFadeInしたい場合
                         color.a = fadeIn ? alpha : 1 - alpha;
                         images[y, x, Direction.Horizontal].color = color;
                     }
-                    if (roads[y, x, Direction.Vertical])
+                    if (images[y, x, Direction.Vertical])
                     {
                         Color color = images[y, x, Direction.Vertical].color;
                         float alpha = Mathf.Clamp01(Mathf.Max(elapsedTime - xy * (x + y), 0f) / fadeDuration); // 左から右にFadeInしたい場合
@@ -271,7 +289,6 @@ public class MazeManager : MonoBehaviour
                 unexplored += walkableGrid[y, x] ? 1 : 0;
             }
         }
-        // DebugShowMaze();
     }
 
     private void InitRoads(int col, int row)

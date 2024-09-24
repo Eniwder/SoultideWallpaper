@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(Helper());
         IEnumerator Helper()
         {
+
             yield return MazeManager.Instance.CreateMaze();
             yield return DollManager.Instance.SpawnDoll();
 
@@ -47,7 +48,7 @@ public class GameManager : MonoBehaviour
         IEnumerator Helper()
         {
             yield return DollManager.Instance.EscapeDoll();
-            yield return MazeManager.Instance.DeleteMaze();
+            yield return MazeManager.Instance.FinishMaze();
             //GC
             System.GC.Collect();
             //使ってないアセットをアンロード
@@ -55,7 +56,16 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(3f);
             StartGame();
         }
+    }
 
+    public void CleanGame()
+    {
+        StopAllCoroutines();
+
+        MazeManager.Instance.CleanMaze();
+        DollManager.Instance.CleanDoll();
+        System.GC.Collect();
+        Resources.UnloadUnusedAssets();
     }
 
 }
